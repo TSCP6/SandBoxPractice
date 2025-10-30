@@ -4,6 +4,9 @@ using UnityEngine;
 
 public class Manager : MonoBehaviour
 {
+    public enum Mode { CreativeMode, FreeMode};
+    public Mode curMode;
+
     // Start is called before the first frame update
     void Start()
     {

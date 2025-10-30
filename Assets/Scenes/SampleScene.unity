@@ -430,11 +430,8 @@ MonoBehaviour:
   moveSpeed: 10
   useSmoothMovement: 1
   smoothSpeed: 5
-  minX: -5
-  maxX: 5
-  minZ: -10
-  maxZ: 0
   rotationSpeed: 3
+  enableRotation: 1
   zoomSpeed: 10
   minZoom: 2
   maxZoom: 10
@@ -1016,6 +1013,10 @@ PrefabInstance:
     - target: {fileID: 4108876012343668154, guid: 0b15d989fc112de43b7fa0ea8f256554, type: 3}
       propertyPath: m_Name
       value: CommonObj
+      objectReference: {fileID: 0}
+    - target: {fileID: 4108876012343668154, guid: 0b15d989fc112de43b7fa0ea8f256554, type: 3}
+      propertyPath: m_Layer
+      value: 6
       objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 0b15d989fc112de43b7fa0ea8f256554, type: 3}
