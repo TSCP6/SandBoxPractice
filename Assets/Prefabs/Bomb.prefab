@@ -130,3 +130,9 @@ MonoBehaviour:
   force: 10
   stopFactor: 4
   mode: 0
+  isDragging: 0
+  targetObj: {fileID: 0}
+  bombForce: 10
+  range: 5
+  blinkTime: 3
+  blinkInterval: 0.5

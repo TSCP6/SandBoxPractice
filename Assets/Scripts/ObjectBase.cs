@@ -7,14 +7,14 @@ public class ObjectBase : MonoBehaviour
     public float force = 10f;
     public float stopFactor = 4f;
     public Manager.Mode mode;
+    public bool isDragging = false;
+    public GameObject targetObj = null;
 
-    bool isDragging = false;
     Vector3 moveDir;
     Vector3 dragMouseStartPos;
     Vector3 lastMousePos;
     Vector3 worldDelta;
     Camera mainCamera;
-    GameObject targetObj = null;
 
     // Start is called before the first frame update
     void Start()
