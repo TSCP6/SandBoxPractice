@@ -14,17 +14,35 @@ public class ObjectBase : MonoBehaviour
     Vector3 dragMouseStartPos;
     Vector3 lastMousePos;
     Vector3 worldDelta;
-    Camera mainCamera;
+    protected Camera mainCamera;
 
     // Start is called before the first frame update
     void Start()
     {
-        mode = Manager.Mode.FreeMode;
         mainCamera = Camera.main;
+
+        if(Manager.Instance != null)
+        {
+            Manager.Instance.ModeChanged += OnModeChanged;
+            OnModeChanged(mode, Manager.Instance.currentMode);
+        }
+    }
+
+    private void OnDestroy()
+    {
+        if(Manager.Instance != null)
+        {
+            Manager.Instance.ModeChanged -= OnModeChanged;
+        }
+    }
+
+    private void OnModeChanged(Manager.Mode oldMode, Manager.Mode newMode)
+    {
+        mode = newMode;
     }
 
     // Update is called once per frame
-    void Update()
+    protected virtual void Update()
     {
         if (mode == Manager.Mode.FreeMode)
         {
@@ -32,29 +50,34 @@ public class ObjectBase : MonoBehaviour
         }
     }
 
-    void DragMove()
+    protected virtual bool TrySelectTarget()
+    {
+        Ray ray = mainCamera.ScreenPointToRay(Input.mousePosition);
+
+        if (Physics.Raycast(ray, out RaycastHit raycastHit))
+        {
+            if (raycastHit.collider.gameObject.layer == LayerMask.NameToLayer("TargetObject"))
+            {
+                targetObj = raycastHit.collider.gameObject;
+                if (targetObj.TryGetComponent<Rigidbody>(out _))
+                {
+                    return true;
+                }
+            }
+        }
+        targetObj = null;
+        return false;
+    }
+
+    protected void DragMove()
     {
         if (Input.GetMouseButtonDown(0))
         {
-            Ray ray = mainCamera.ScreenPointToRay(Input.mousePosition);
-
-            if (Physics.Raycast(ray, out RaycastHit raycastHit))
+            if (TrySelectTarget())
             {
-                targetObj = raycastHit.collider.gameObject;
-                if (targetObj.layer == LayerMask.NameToLayer("TargetObject"))
-                {
-                    targetObj = raycastHit.collider.gameObject;
-                    if (targetObj.TryGetComponent<Rigidbody>(out Rigidbody rb))
-                    {
-                        isDragging = true;
-                        dragMouseStartPos = Input.mousePosition;
-                        lastMousePos = Input.mousePosition;
-                    }
-                    else
-                    {
-                        targetObj = null;
-                    }
-                }
+                isDragging = true;
+                dragMouseStartPos = Input.mousePosition;
+                lastMousePos = Input.mousePosition;
             }
         }
 
@@ -81,7 +104,7 @@ public class ObjectBase : MonoBehaviour
 
         if (Input.GetMouseButtonUp(0))
         {
-            if (targetObj.TryGetComponent<Rigidbody>(out Rigidbody rb))
+            if (targetObj!=null && targetObj.TryGetComponent<Rigidbody>(out Rigidbody rb))
             {
                 rb.AddForce(worldDelta.normalized * force / stopFactor, ForceMode.Impulse);
             }

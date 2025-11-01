@@ -16,7 +16,7 @@ GameObject:
   - component: {fileID: 222491927408237571}
   m_Layer: 6
   m_Name: SpecialObj
-  m_TagString: Untagged
+  m_TagString: SpecialOBJ
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -130,3 +130,8 @@ MonoBehaviour:
   force: 10
   stopFactor: 4
   mode: 0
+  isDragging: 0
+  targetObj: {fileID: 0}
+  range: 5
+  specialForce: 5
+  ability: 0

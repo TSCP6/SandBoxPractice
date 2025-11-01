@@ -7,38 +7,62 @@ public class SpecialAbility : ObjectBase
 {
     public float range = 5f;
     public float specialForce = 5f;
+    public float stopTime = 0.5f;
     public enum Ability { attract, repulsion };
     public Ability ability = Ability.attract;
 
+    private Coroutine stopObj = null;
     Collider[] neighborObjs;
 
-    private void Update()
+    protected override void Update()
     {
-        Vector3 center = transform.position;
-        neighborObjs = Physics.OverlapSphere(center, range);
-        AttractionAndRepulsion(center);
-        ChangeSpecial();
+        if (mode == Manager.Mode.FreeMode)
+        {
+            HandleSpecialAbility();
+        }
     }
 
-    void AttractionAndRepulsion(Vector3 center)
+    private void HandleSpecialAbility()
     {
-        gameObject.TryGetComponent<Rigidbody>(out Rigidbody rb);
-        Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
-        rb.freezeRotation = true;
-        if (isDragging == false || (Input.GetMouseButtonUp(0) && rb.isKinematic == false))
+        if (Input.GetMouseButtonDown(0))
         {
+            if (TrySelectTarget())
+            {
+                isDragging = true;
+                if(gameObject.TryGetComponent<Rigidbody>(out Rigidbody rb))
+                {
+                    //如果正在停止，终止
+                    if(stopObj != null)
+                    {
+                        StopCoroutine(stopObj);
+                        stopObj = null;
+                    }
+                    rb.isKinematic = false;
+                }
+            }
+        }
+
+        if (isDragging)
+        {
+            DragMove();
+        }
+
+        if (Input.GetMouseButtonUp(0))
+        {
+            isDragging = false;
+            if (gameObject.TryGetComponent<Rigidbody>(out Rigidbody rb))
+            {
+                if(stopObj != null)
+                {
+                    StopCoroutine(stopObj);
+                }
+                stopObj = StartCoroutine(SmoothStop(rb));
+            }
             targetObj = null;
-            rb.isKinematic = true;
         }
-        if (Input.GetMouseButtonDown(0) && rb.isKinematic == true)
-        {
-            Physics.Raycast(ray, out RaycastHit hit);
-            if (hit.collider.gameObject.tag == "SpecialOBJ")
-                targetObj = hit.collider.gameObject;
-            else targetObj = null;
-            isDragging = true;
-            rb.isKinematic = false;
-        }
+
+        Vector3 center = transform.position;
+        neighborObjs = Physics.OverlapSphere(center, range);
         foreach (Collider collider in neighborObjs)
         {
             if (collider.gameObject.tag == "CommonOBJ")
@@ -46,6 +70,40 @@ public class SpecialAbility : ObjectBase
                 ApplyForce(ability, collider, center);
             }
         }
+        ChangeSpecial();
+    }
+
+    IEnumerator SmoothStop(Rigidbody rb)
+    {
+        float elapsedTime = 0f;
+        Vector3 initialVelocity = rb.velocity;
+        while (elapsedTime < Time.deltaTime)
+        {
+            elapsedTime += Time.deltaTime;
+            float t = elapsedTime / stopTime;
+            t = 1 - Mathf.Pow(1 - t, 3);
+            rb.velocity = Vector3.Lerp(initialVelocity, Vector3.zero, t);
+            yield return null;
+        }
+
+        rb.velocity = Vector3.zero;
+        rb.isKinematic = true;
+        stopObj = null;
+    }
+ 
+    protected override bool TrySelectTarget()
+    {
+        Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
+        if(Physics.Raycast(ray, out RaycastHit hit))
+        {
+            if (hit.collider.gameObject.tag == "SpecialOBJ")
+            {
+                targetObj = hit.collider.gameObject;
+                return true;
+            }
+        }
+        targetObj = null;
+        return false;
     }
 
     void ApplyForce(Ability ability, Collider collider, Vector3 center)
@@ -64,9 +122,9 @@ public class SpecialAbility : ObjectBase
 
     void ChangeSpecial()
     {
-        if (Input.GetKeyDown(KeyCode.R) && targetObj.tag == "SpecialOBJ")
+        if (targetObj!=null && targetObj.tag == "SpecialOBJ" && Input.GetKeyDown(KeyCode.R))
         {
-            if(targetObj.TryGetComponent<Renderer>(out  Renderer renderer))
+            if (targetObj.TryGetComponent<Renderer>(out Renderer renderer))
             {
                 if (ability == Ability.attract)
                 {
