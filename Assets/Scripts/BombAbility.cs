@@ -16,7 +16,7 @@ public class BombAbility : ObjectBase
     private void Start()
     {
         bombRenderer = GetComponent<Renderer>();
-        StartCoroutine(BlinkAndExplode());
+            StartCoroutine(BlinkAndExplode());
     }
 
     IEnumerator BlinkAndExplode()

@@ -127,7 +127,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 2db753fb47ffb5e48a6f1bc26c9d0b2f, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  force: 10
+  force: 5
   stopFactor: 4
   mode: 0
   isDragging: 0

@@ -6,13 +6,17 @@ using UnityEngine;
 public class ObjectCreator : MonoBehaviour
 {
     private bool onlyInCreativeMode = true; //只在创造模式中实现
+    private bool canCreate = false;
 
     public GameObject[] prefabs = new GameObject[3]; //三个预制体
     private int curPrefabIndex = 0; //预制体索引
 
     public Material previewMaterial; //预览透明材质
-    public Color previewColor = new Color(1f, 1f, 1f, 0.5f);
-    private GameObject previewObject; 
+    public Color previewColor = new Color(1f, 1f, 1f, 0.4f);
+    public Vector3 defaultPos = new Vector3(0, 4f, 0);
+    public float heightAdjustSpeed = 2f;
+    private GameObject previewObject;
+    private float heightOffset = 0f;
 
     public Color lineColor = Color.white;
     public float lineWidth = 0.05f;
@@ -51,6 +55,8 @@ public class ObjectCreator : MonoBehaviour
 
     void Update()
     {
+        if (!canCreate) return;
+
         // 只在创造模式下允许创建物体
         if (onlyInCreativeMode && !Manager.Instance.IsMode(Manager.Mode.CreativeMode))
         {
@@ -60,9 +66,26 @@ public class ObjectCreator : MonoBehaviour
 
         HandlePrefabSelection(); //切换预制体
 
+        HandleHeight(); //处理高度
+
         UpdatePreview(); //更新预制体
 
         HandleObjectCreation(); //创建物体
+    }
+
+    void HandleHeight()
+    {
+        if (previewObject == null || !isPreviewActive) return;
+
+        float adjustment = 0f;
+        if (Input.GetKey(KeyCode.UpArrow))
+            adjustment += heightAdjustSpeed * Time.deltaTime;
+        if (Input.GetKey(KeyCode.DownArrow)) 
+            adjustment -= heightAdjustSpeed * Time.deltaTime;
+        if(adjustment != 0f)
+        {
+            heightOffset += adjustment;
+        }
     }
 
     void HandlePrefabSelection() //按下主键盘或小键盘123调用选择012
@@ -96,8 +119,10 @@ public class ObjectCreator : MonoBehaviour
     //设置透明材质，preview active
     void CreatePreviewObject()
     {
+        Vector3 position = defaultPos;
         if(previewObject != null)
         {
+            position = previewObject.transform.position;
             Destroy(previewObject);
         }
         if (prefabs[curPrefabIndex] == null)
@@ -105,13 +130,18 @@ public class ObjectCreator : MonoBehaviour
             return;
         }
 
-        previewObject = Instantiate(prefabs[curPrefabIndex]);
+        previewObject = Instantiate(prefabs[curPrefabIndex], position, Quaternion.identity);
         previewObject.name = "PreviewObject";
 
         if(previewObject.TryGetComponent<Rigidbody>(out Rigidbody rb))
         {
             rb.useGravity = false;
             rb.isKinematic = true;
+        }
+
+        if(previewObject.TryGetComponent<BombAbility>(out BombAbility bomb))
+        {
+            bomb.enabled = false;
         }
 
         Collider[] collider = previewObject.GetComponentsInChildren<Collider>();
@@ -131,7 +161,7 @@ public class ObjectCreator : MonoBehaviour
         Renderer[] renderer = obj.GetComponentsInChildren<Renderer>();
         foreach(Renderer render in renderer)
         {
-            Material[] materials = render.GetComponentsInChildren<Material>();
+            Material[] materials = render.materials;
             for (int i = 0; i < materials.Length; i++)
             {
                 if(previewMaterial != null)
@@ -152,21 +182,22 @@ public class ObjectCreator : MonoBehaviour
         if(!isPreviewActive || previewObject == null)
         {
             CreatePreviewObject();
-        }
-        if (previewObject == null)
-        {
-            HidePreview();
-            return;
+            if (previewObject == null)
+            {
+                HidePreview();
+                return;
+            }
         }
 
         Ray ray = mainCamera.ScreenPointToRay(Input.mousePosition);
         
         if(Physics.Raycast(ray, out RaycastHit hit, Mathf.Infinity, groundLayer))
         {
-            previewObject.transform.position = hit.point;
+            Vector3 targetPos = hit.point + defaultPos + new Vector3(0, heightOffset, 0);
+            previewObject.transform.position = targetPos;
             previewObject.SetActive(true);
 
-            UpdateDropIndicator(hit.point);
+            UpdateDropIndicator(targetPos);
         }
     }
 
@@ -202,6 +233,10 @@ public class ObjectCreator : MonoBehaviour
             dropIndicator.SetPosition(1, hit.point);
             dropIndicator.enabled = true;
         }
+        else
+        {
+            dropIndicator.enabled = false;
+        }
     }
 
     //点击左键且预览不为空，创建物体
@@ -220,27 +255,9 @@ public class ObjectCreator : MonoBehaviour
         {
             return;
         }
-        Vector3 dropPos = GetDropPosition();
 
-        GameObject newObj = Instantiate(prefabs[curPrefabIndex], dropPos, Quaternion.identity);
+        GameObject newObj = Instantiate(prefabs[curPrefabIndex], previewObject.transform.position, Quaternion.identity);
         newObj.name = prefabs[curPrefabIndex].name;
-    }
-
-    //预览物体为空，返回0；创建射线
-    Vector3 GetDropPosition()
-    {
-        if (prefabs[curPrefabIndex] == null)
-        {
-            return Vector3.zero;
-        }
-        Vector3 startPos = previewObject.transform.position;
-        Ray downRay = new Ray(startPos, Vector3.down);
-
-        if(Physics.Raycast(downRay, out RaycastHit hit, maxDropDistance, groundLayer))
-        {
-            return hit.point;
-        }
-        return startPos;
     }
 
     //如果预览物体和预览线都不为空，隐藏，不启用预览
@@ -262,7 +279,7 @@ public class ObjectCreator : MonoBehaviour
     {
         if (onlyInCreativeMode)
         {
-            bool isActive = mode == Manager.Mode.CreativeMode;
+            canCreate = mode == Manager.Mode.CreativeMode;
         }
     }
 }

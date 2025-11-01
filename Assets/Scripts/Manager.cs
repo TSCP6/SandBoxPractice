@@ -1,13 +1,27 @@
 using System.Collections;
 using System.Collections.Generic;
+using TMPro;
 using UnityEngine;
+using UnityEngine.UI;
 
 public class Manager : MonoBehaviour
 {
+    public GameObject panel; 
+    public GameObject creativeModePanel; //创造模式显示面板
+    public TextMeshProUGUI modeText; //显示当前模式
+    public TextMeshProUGUI pauseCondition;
+    public TextMeshProUGUI timeScaleCondition;
+
+    private bool isPaused = false;
+    private float[] timeScale = { 1f, 2f};
+    private int curTimeIndex = -1;
+    private float lastTimeScale = 1f;
+
     public enum Mode { CreativeMode, FreeMode };
     public static Manager Instance { get; private set; } //任何代码都可以读取，但是仅能在manager中进行修改
 
-    Mode startMode = Mode.FreeMode;
+    [SerializeField]
+    private Mode startMode = Mode.FreeMode;
     Mode curMode;
 
     public Mode currentMode
@@ -44,7 +58,7 @@ public class Manager : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
-        curMode = startMode;
+        currentMode = startMode;
     }
 
     // Update is called once per frame
@@ -53,6 +67,14 @@ public class Manager : MonoBehaviour
         if (Input.GetKeyDown(KeyCode.C))
         {
             ToggleMode();
+        }
+        if (Input.GetKeyDown(KeyCode.Space))
+        {
+            TogglePause();
+        }
+        if (Input.GetKeyDown(KeyCode.Tab))
+        {
+            ToggleTimeScale();
         }
     }
 
@@ -74,6 +96,39 @@ public class Manager : MonoBehaviour
         SwitchMode(newMode);
     }
 
+    void TogglePause()
+    {
+        isPaused = !isPaused;
+
+        if (isPaused)
+        {
+            lastTimeScale = Time.timeScale;
+            Time.timeScale = 0;
+            pauseCondition.text = "Off";
+        }
+        else
+        {
+            Time.timeScale = lastTimeScale;
+            pauseCondition.text = "On";
+        }
+    }
+
+    void ToggleTimeScale()
+    {
+        curTimeIndex = (curTimeIndex + 1) % timeScale.Length;
+
+        float newTimeScale = timeScale[curTimeIndex];
+
+        if (!isPaused)
+        {
+            Time.timeScale = newTimeScale;
+        }
+
+        lastTimeScale = newTimeScale;
+
+        timeScaleCondition.text = "×" + Time.timeScale;
+    }
+
     private void OnModeChanged(Mode oldMode, Mode newMode)
     {
         Debug.Log($"模式切换: {oldMode} -> {newMode}");
@@ -93,11 +148,15 @@ public class Manager : MonoBehaviour
     private void EnterCreativeMode()
     {
         Debug.Log("进入创造模式");
+        if (creativeModePanel != null) creativeModePanel.SetActive(true);
+        if (modeText != null) modeText.text = "Creative Mode";
     }
 
     private void EnterFreeMode()
     {
         Debug.Log("进入自由模式");
+        if (creativeModePanel != null) creativeModePanel.SetActive(false);
+        if (modeText != null) modeText.text = "Free Mode";
     }
 
     public bool IsMode(Mode mode)

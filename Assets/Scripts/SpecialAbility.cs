@@ -16,10 +16,7 @@ public class SpecialAbility : ObjectBase
 
     protected override void Update()
     {
-        if (mode == Manager.Mode.FreeMode)
-        {
-            HandleSpecialAbility();
-        }
+        HandleSpecialAbility();
     }
 
     private void HandleSpecialAbility()
@@ -29,10 +26,10 @@ public class SpecialAbility : ObjectBase
             if (TrySelectTarget())
             {
                 isDragging = true;
-                if(gameObject.TryGetComponent<Rigidbody>(out Rigidbody rb))
+                if (gameObject.TryGetComponent<Rigidbody>(out Rigidbody rb))
                 {
                     //如果正在停止，终止
-                    if(stopObj != null)
+                    if (stopObj != null)
                     {
                         StopCoroutine(stopObj);
                         stopObj = null;
@@ -52,7 +49,7 @@ public class SpecialAbility : ObjectBase
             isDragging = false;
             if (gameObject.TryGetComponent<Rigidbody>(out Rigidbody rb))
             {
-                if(stopObj != null)
+                if (stopObj != null)
                 {
                     StopCoroutine(stopObj);
                 }
@@ -70,7 +67,8 @@ public class SpecialAbility : ObjectBase
                 ApplyForce(ability, collider, center);
             }
         }
-        ChangeSpecial();
+        if (mode == Manager.Mode.FreeMode)
+            ChangeSpecial();
     }
 
     IEnumerator SmoothStop(Rigidbody rb)
@@ -90,11 +88,11 @@ public class SpecialAbility : ObjectBase
         rb.isKinematic = true;
         stopObj = null;
     }
- 
+
     protected override bool TrySelectTarget()
     {
         Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
-        if(Physics.Raycast(ray, out RaycastHit hit))
+        if (Physics.Raycast(ray, out RaycastHit hit))
         {
             if (hit.collider.gameObject.tag == "SpecialOBJ")
             {
@@ -122,7 +120,7 @@ public class SpecialAbility : ObjectBase
 
     void ChangeSpecial()
     {
-        if (targetObj!=null && targetObj.tag == "SpecialOBJ" && Input.GetKeyDown(KeyCode.R))
+        if (targetObj != null && targetObj.tag == "SpecialOBJ" && Input.GetKeyDown(KeyCode.R))
         {
             if (targetObj.TryGetComponent<Renderer>(out Renderer renderer))
             {
