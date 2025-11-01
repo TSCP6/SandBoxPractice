@@ -9,6 +9,7 @@ public class ObjectBase : MonoBehaviour
     public Manager.Mode mode;
     public bool isDragging = false;
     public GameObject targetObj = null;
+    public float maxSpeed = 10f;
 
     Vector3 moveDir;
     Vector3 dragMouseStartPos;
@@ -44,6 +45,14 @@ public class ObjectBase : MonoBehaviour
     // Update is called once per frame
     protected virtual void Update()
     {
+        if(TryGetComponent<Rigidbody>(out Rigidbody rb))
+        {
+            if(rb.velocity.magnitude > maxSpeed)
+            {
+                rb.velocity = maxSpeed * rb.velocity.normalized;
+            }
+        }
+
         if (mode == Manager.Mode.FreeMode)
         {
             DragMove();

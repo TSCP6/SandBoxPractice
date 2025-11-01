@@ -144,6 +144,11 @@ public class ObjectCreator : MonoBehaviour
             bomb.enabled = false;
         }
 
+        if (previewObject.TryGetComponent<SpecialAbility>(out SpecialAbility specialAbility))
+        {
+            specialAbility.enabled = false;
+        }
+
         Collider[] collider = previewObject.GetComponentsInChildren<Collider>();
         foreach(Collider col in collider)
         {
@@ -256,7 +261,7 @@ public class ObjectCreator : MonoBehaviour
             return;
         }
 
-        GameObject newObj = Instantiate(prefabs[curPrefabIndex], previewObject.transform.position, Quaternion.identity);
+        GameObject newObj = ObjectPool.Instance.Spawn(prefabs[curPrefabIndex].name, previewObject.transform.position, Quaternion.identity);
         newObj.name = prefabs[curPrefabIndex].name;
     }
 
@@ -280,6 +285,10 @@ public class ObjectCreator : MonoBehaviour
         if (onlyInCreativeMode)
         {
             canCreate = mode == Manager.Mode.CreativeMode;
+            if (!canCreate)
+            {
+                HidePreview();
+            }
         }
     }
 }

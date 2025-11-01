@@ -7,7 +7,6 @@ using UnityEngine.UI;
 public class Manager : MonoBehaviour
 {
     public GameObject panel; 
-    public GameObject creativeModePanel; //创造模式显示面板
     public TextMeshProUGUI modeText; //显示当前模式
     public TextMeshProUGUI pauseCondition;
     public TextMeshProUGUI timeScaleCondition;
@@ -148,14 +147,12 @@ public class Manager : MonoBehaviour
     private void EnterCreativeMode()
     {
         Debug.Log("进入创造模式");
-        if (creativeModePanel != null) creativeModePanel.SetActive(true);
         if (modeText != null) modeText.text = "Creative Mode";
     }
 
     private void EnterFreeMode()
     {
         Debug.Log("进入自由模式");
-        if (creativeModePanel != null) creativeModePanel.SetActive(false);
         if (modeText != null) modeText.text = "Free Mode";
     }
 

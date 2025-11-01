@@ -52,6 +52,7 @@ public class BombAbility : ObjectBase
             }
         }
 
+        ObjectPool.Instance.Return(gameObject);
         Destroy(gameObject);
     }
 

@@ -13,9 +13,26 @@ public class SpecialAbility : ObjectBase
 
     private Coroutine stopObj = null;
     Collider[] neighborObjs;
+    Rigidbody rb;
+
+    private void Awake()
+    {
+        rb = GetComponent<Rigidbody>();
+    }
+
+    private void OnEnable()
+    {
+        // 当对象从池中激活时，重置其物理状态以确保它可以下落
+        if (rb != null)
+        {
+            rb.isKinematic = false;
+            rb.useGravity = true;
+        }
+    }
 
     protected override void Update()
     {
+        base.Update();
         HandleSpecialAbility();
     }
 
@@ -64,7 +81,8 @@ public class SpecialAbility : ObjectBase
         {
             if (collider.gameObject.tag == "CommonOBJ")
             {
-                ApplyForce(ability, collider, center);
+                if (rb.isKinematic)
+                    ApplyForce(ability, collider, center);
             }
         }
         if (mode == Manager.Mode.FreeMode)
@@ -75,7 +93,7 @@ public class SpecialAbility : ObjectBase
     {
         float elapsedTime = 0f;
         Vector3 initialVelocity = rb.velocity;
-        while (elapsedTime < Time.deltaTime)
+        while (elapsedTime < stopTime)
         {
             elapsedTime += Time.deltaTime;
             float t = elapsedTime / stopTime;
@@ -107,15 +125,19 @@ public class SpecialAbility : ObjectBase
     void ApplyForce(Ability ability, Collider collider, Vector3 center)
     {
         collider.gameObject.TryGetComponent<Rigidbody>(out Rigidbody rb);
-        Vector3 forceDir = (center - collider.transform.position).normalized;
-        if (ability == Ability.attract)
+        if (!rb.isKinematic)
         {
-            rb.AddForce(specialForce * forceDir);
+            Vector3 forceDir = (center - collider.transform.position).normalized;
+            if (ability == Ability.attract)
+            {
+                rb.AddForce(specialForce * forceDir);
+            }
+            else if (ability == Ability.repulsion)
+            {
+                rb.AddForce(-specialForce * forceDir);
+            }
         }
-        else if (ability == Ability.repulsion)
-        {
-            rb.AddForce(-specialForce * forceDir);
-        }
+        
     }
 
     void ChangeSpecial()
